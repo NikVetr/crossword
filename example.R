@@ -45,9 +45,12 @@ if(has_transparency){
   pic_locs <- which(pic_mat, arr.ind = T)
 }
 
-#### run MCMC once ####
+#### run MCMC ####
 
-# generate and draw a single xword
+#set MCMC params
+n_iter <- 100
+
+# generate and draw an initial xword
 raw_xword <- generate_xword(words, max_attempts_word_placement = 20)
 xword <- raw_xword[["xword"]]
 word_locs <- raw_xword[["word_locs"]]
@@ -57,8 +60,7 @@ trimmed_xword_data <- trim_matrix(xword, word_locs)
 #specify font properties
 ptsize_x <- 5
 font_family_for_nums = "Home Christmas"
-
-#draw
+# font_family_for_nums = "Arial Unicode MS"
 png("output/img/init_xword.png", family = font_family_for_nums, width = ncol(trimmed_xword_data$xword) * 30 * ptsize_x, 
     height = nrow(trimmed_xword_data$xword) * 30 * ptsize_x, pointsize = 12 * ptsize_x)
 par(xpd = NA, mar = c(0,0,0,0))
@@ -66,41 +68,97 @@ draw_xword(trimmed_xword_data$xword, trimmed_xword_data$word_locs, border_lwd = 
            family = font_family_for_nums, num_cex = 1)
 dev.off()
 
-#### run MCMC a bunch of times ####
 
-#specify output directory
-xword_img_dir <- "output/img/"
-xword_clues_dir <- "output/txt/"
-xword_RData_dir <- "output/RData/"
-if(!dir.exists(xword_img_dir)) dir.create(xword_img_dir)
-if(!dir.exists(xword_clues_dir)) dir.create(xword_clues_dir)
-if(!dir.exists(xword_RData_dir)) dir.create(xword_RData_dir)
+#run MCMC
+for(i in 1:n_iter){
+  cat(paste0("(i: ", i, ", "))
+  prop_raw_xword <- swap_word(xword, words, word_locs)
+  prop_score <- score_xword(prop_raw_xword[["xword"]], words, prop_raw_xword[["word_locs"]])
+  # prop_score <- prop_score +
+  #   ifelse(sum(find_n_extra(prop_raw_xword[["xword"]], words)) == 0,
+  #      0,
+  #      Inf)
+  accept_prob <- invlogit(curr_score - prop_score)
+  cat(paste0("\ndNC", ": ", sum(prop_raw_xword$xword != "") - sum(xword != ""),", "))
+  if(rbinom(1, 1, prob = accept_prob) == 1){
+    
+    xword <- prop_raw_xword[["xword"]]
+    word_locs <- prop_raw_xword[["word_locs"]]
+    curr_score <- prop_score
+    cat(paste0("dS", ": ", curr_score))
+    
+    #draw if desired
+    trimmed_xword <- trim_matrix(xword, word_locs)$xword
+    trimmed_word_locs <- trim_matrix(xword, word_locs)$word_locs
+    png("~/xword.png", family = font_family_for_nums, width = ncol(trimmed_xword_data$xword) * 30 * ptsize_x, 
+        height = nrow(trimmed_xword_data$xword) * 30 * ptsize_x, pointsize = 12 * ptsize_x)
+    par(xpd = NA, mar = c(0,0,0,0))
+    draw_xword(trimmed_xword, trimmed_word_locs, border_lwd = 2 * ptsize_x,
+               family = "Arial Unicode MS", num_cex = 1)
+    dev.off()
+    
+  } else {
+    cat(paste0("dS", ": ", "^"))
+  }
+  cat(")\n")
 
-#set number of xwords to generate
-n_xwords <- 5
-xword_indices <- 1:n_xwords
+}
 
-#generate replicate xwords
+
+#function for running MCMC
+run_MCMC <- function(xword, word_locs, n_iter = 100, print_progress = F){
+
+  words <- names(word_locs)
+  curr_score <- score_xword(xword, words, word_locs)
+  for(i in 1:n_iter){
+    if(print_progress){cat(paste0("(i: ", i, ", "))}
+    
+    prop_raw_xword <- swap_word(xword, words, word_locs)
+    prop_score <- score_xword(prop_raw_xword[["xword"]], words, prop_raw_xword[["word_locs"]])
+    accept_prob <- 1 - invlogit(curr_score - prop_score)
+    
+    if(print_progress){cat(paste0("\ndNC", ": ", sum(prop_raw_xword$xword != "") - sum(xword != ""),", "))}
+    
+    #accept-reject
+    if(rbinom(1, 1, prob = accept_prob) == 1){
+      
+      xword <- prop_raw_xword[["xword"]]
+      word_locs <- prop_raw_xword[["word_locs"]]
+      curr_score <- prop_score
+      if(print_progress){cat(paste0("dS", ": ", curr_score))}
+    
+    } else {
+      if(print_progress){cat(paste0("dS", ": ", "^"))}
+    }
+    if(print_progress){cat(")\n")}
+  }
+  
+  return(list(xword = xword, word_locs = word_locs))
+}
+
+#generate random xwords
+xword_dir <- "~/xwords/russian_runs/"
+if(!dir.exists(xword_dir)) dir.create(xword_dir)
+ptsize_x <- 5
+xword_indices <- 101:110
 for(i in xword_indices){
   print(i)
   
   raw_xword <- generate_xword(words, max_attempts_word_placement = 20)
   
-  #save both original and also refined version (MCMC output)
+  #save original and also refined version (MCMC output)
   for(j in 1:2){
-    
     if(j == 2){
       refined_xword <- run_MCMC(raw_xword[["xword"]], raw_xword[["word_locs"]], n_iter = 50)
     } else {
       refined_xword <- raw_xword
     }
+    
+    save(refined_xword, file = paste0(xword_dir, "xword_", i, ifelse(j==1, "-orig", ""), ".RData"))
     trimmed_xword_data <- trim_matrix(refined_xword[["xword"]], refined_xword[["word_locs"]])
     
-    #save data object to file
-    save(refined_xword, file = paste0(xword_RData_dir, "xword_", i, ifelse(j==1, "-orig", ""), ".RData"))
-    
     #draw xword with words filled in
-    png(paste0(xword_img_dir, "xword_", i, ifelse(j==1, "-orig", ""), ".png"), family = font_family_for_nums, width = ncol(trimmed_xword_data$xword) * 30 * ptsize_x, 
+    png(paste0(xword_dir, "xword_", i, ifelse(j==1, "-orig", ""), ".png"), family = font_family_for_nums, width = ncol(trimmed_xword_data$xword) * 30 * ptsize_x, 
         height = nrow(trimmed_xword_data$xword) * 30 * ptsize_x, pointsize = 12 * ptsize_x)
     par(xpd = NA, mar = c(0,0,0,0))
     draw_xword(trimmed_xword_data$xword, trimmed_xword_data$word_locs, border_lwd = 2 * ptsize_x,
@@ -108,7 +166,7 @@ for(i in xword_indices){
     dev.off()
     
     #draw blank xword
-    png(paste0(xword_img_dir, "xword_", i, ifelse(j==1, "-orig", ""), "_blank.png"), family = font_family_for_nums, width = ncol(trimmed_xword_data$xword) * 30 * ptsize_x, 
+    png(paste0(xword_dir, "xword_", i, ifelse(j==1, "-orig", ""), "_blank.png"), family = font_family_for_nums, width = ncol(trimmed_xword_data$xword) * 30 * ptsize_x, 
         height = nrow(trimmed_xword_data$xword) * 30 * ptsize_x, pointsize = 12 * ptsize_x)
     par(xpd = NA, mar = c(0,0,0,0))
     draw_xword(trimmed_xword_data$xword, trimmed_xword_data$word_locs, border_lwd = 2 * ptsize_x, write_words = F,
@@ -116,7 +174,7 @@ for(i in xword_indices){
     dev.off()
     
     #draw shape of xword
-    png(paste0(xword_img_dir, "xword_", i, ifelse(j==1, "-orig", ""), "_shape.png"), family = font_family_for_nums, width = ncol(trimmed_xword_data$xword) * 30 * ptsize_x, 
+    png(paste0(xword_dir, "xword_", i, ifelse(j==1, "-orig", ""), "_shape.png"), family = font_family_for_nums, width = ncol(trimmed_xword_data$xword) * 30 * ptsize_x, 
         height = nrow(trimmed_xword_data$xword) * 30 * ptsize_x, pointsize = 12 * ptsize_x)
     par(xpd = NA, mar = c(0,0,0,0))
     draw_xword(trimmed_xword_data$xword, trimmed_xword_data$word_locs, border_lwd = 2 * ptsize_x, write_words = F, 
@@ -128,7 +186,7 @@ for(i in xword_indices){
     #save words and clues
     word_numbers <- number_words(trimmed_xword_data$word_locs)
     
-    sink(paste0(xword_clues_dir, "xword_", i, ifelse(j==1, "-orig", ""), "_answers-clues.txt"))
+    sink(paste0(xword_dir, "xword_", i, ifelse(j==1, "-orig", ""), "_answers-clues.txt"))
     
     cat("ANSWERS:\n\n")
     cat(paste0("\nHorizontal: ", paste0(word_numbers$word_order$h$num, ". ", full_words[word_numbers$word_order$h$word], collapse = " ")))
@@ -146,26 +204,14 @@ for(i in xword_indices){
 
 #### further refinement ####
 # iterate over favorites for further refinements
-
-xword_fave_dir <- "output/favorites/"
-if(!dir.exists(xword_fave_dir)) dir.create(xword_fave_dir)
-
-n_fave_replicates <- 5
-xword_indices <- 1:n_fave_replicates
-fave_i <- c(3, 5)
-
-if(exists("fave_i")){
-  fave_sources <- paste0("output/RData/", fave_i, ".RData")  
-} else {
-  fave_sources <- list.files(xword_fave_dir)
-}
-
-for(j in seq_along(fave_sources)){
-  
-
+xword_dir <- "~/xwords/fave-iterations/"
+if(!dir.exists(xword_dir)) dir.create(xword_dir)
+xword_indices <- 1:50
+fave_i <- 244
+ptsize_x <- 5
 for(i in xword_indices){
   
-  load(fave_sources[j])
+  load(paste0("~/xwords/runs/xword_", fave_i, ".RData"))
   
   if(i != 1){
     refined_xword <- run_MCMC(refined_xword[["xword"]], refined_xword[["word_locs"]], n_iter = 10)  
@@ -213,7 +259,5 @@ for(i in xword_indices){
   cat(paste0("\n\nVertical: ", paste0(word_numbers$word_order$v$num, ". ", clues[word_numbers$word_order$v$word], collapse = " ")))
   
   sink()
-  
-}
   
 }
