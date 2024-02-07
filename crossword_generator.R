@@ -152,68 +152,69 @@ if(!dir.exists(xword_fave_dir)) dir.create(xword_fave_dir)
 
 n_fave_replicates <- 5
 xword_indices <- 1:n_fave_replicates
-fave_i <- c(3, 5)
+fave_i <- c(3, "5-orig")
 
 if(exists("fave_i")){
-  fave_sources <- paste0("output/RData/", fave_i, ".RData")  
+  fave_sources <- paste0("output/RData/xword_", fave_i[j], ".RData")  
 } else {
-  fave_sources <- list.files(xword_fave_dir)
+  fave_sources <- paste0(xword_fave_dir, list.files(xword_fave_dir))
+  fave_i <- do.call(rbind, strsplit(fave_sources, split = "_|\\."))[,2]
 }
 
 for(j in seq_along(fave_sources)){
-  
-
-for(i in xword_indices){
-  
-  load(fave_sources[j])
-  
-  if(i != 1){
-    refined_xword <- run_MCMC(refined_xword[["xword"]], refined_xword[["word_locs"]], n_iter = 10)  
+    
+  for(i in xword_indices){
+    
+    load(fave_sources[j])
+    
+    if(i != 1){
+      refined_xword <- run_MCMC(refined_xword[["xword"]], refined_xword[["word_locs"]], n_iter = 10)  
+    }
+    
+    save(refined_xword, file = paste0(xword_RData_dir, "refined_xword_", fave_i[j], "-", i, ".RData"))
+    trimmed_xword_data <- trim_matrix(refined_xword[["xword"]], refined_xword[["word_locs"]])
+    
+    #draw xword with words filled in
+    png(paste0(xword_img_dir, "refined_xword_", fave_i[j], "-", i, ".png"), family = font_family_for_nums, width = ncol(trimmed_xword_data$xword) * 30 * ptsize_x, 
+        height = nrow(trimmed_xword_data$xword) * 30 * ptsize_x, pointsize = 12 * ptsize_x)
+    par(xpd = NA, mar = c(0,0,0,0))
+    draw_xword(trimmed_xword_data$xword, trimmed_xword_data$word_locs, border_lwd = 2 * ptsize_x,
+               family = font_family_for_nums, num_cex = 1)
+    dev.off()
+    
+    #draw blank xword
+    png(paste0(xword_img_dir, "refined_xword_", fave_i[j], "-", i, "_blank.png"), family = font_family_for_nums, width = ncol(trimmed_xword_data$xword) * 30 * ptsize_x, 
+        height = nrow(trimmed_xword_data$xword) * 30 * ptsize_x, pointsize = 12 * ptsize_x)
+    par(xpd = NA, mar = c(0,0,0,0))
+    draw_xword(trimmed_xword_data$xword, trimmed_xword_data$word_locs, border_lwd = 2 * ptsize_x, write_words = F,
+               family = font_family_for_nums, num_cex = 1)
+    dev.off()
+    
+    #draw shape of xword
+    png(paste0(xword_img_dir, "refined_xword_", fave_i[j], "-", i, "_shape.png"), family = font_family_for_nums, width = ncol(trimmed_xword_data$xword) * 30 * ptsize_x, 
+        height = nrow(trimmed_xword_data$xword) * 30 * ptsize_x, pointsize = 12 * ptsize_x)
+    par(xpd = NA, mar = c(0,0,0,0))
+    draw_xword(trimmed_xword_data$xword, trimmed_xword_data$word_locs, border_lwd = 2 * ptsize_x, write_words = F, 
+               cell_color = "black", 
+               background_color = "white",
+               family = font_family_for_nums, num_cex = 1)
+    dev.off()
+    
+    #save words and clues
+    word_numbers <- number_words(trimmed_xword_data$word_locs)
+    
+    sink(paste0(xword_clues_dir, "refined_xword_", fave_i[j], "-", i, "_answers-clues.txt"))
+    
+    cat("ANSWERS:\n\n")
+    cat(paste0("\nHorizontal: ", paste0(word_numbers$word_order$h$num, ". ", full_words[word_numbers$word_order$h$word], collapse = " ")))
+    cat(paste0("\n\nVertical: ", paste0(word_numbers$word_order$v$num, ". ", full_words[word_numbers$word_order$v$word], collapse = " ")))
+    
+    cat("\n\nCLUES:\n\n")
+    cat(paste0("\nHorizontal: ", paste0(word_numbers$word_order$h$num, ". ", clues[word_numbers$word_order$h$word], collapse = " ")))
+    cat(paste0("\n\nVertical: ", paste0(word_numbers$word_order$v$num, ". ", clues[word_numbers$word_order$v$word], collapse = " ")))
+    
+    sink()
+    
   }
-  save(refined_xword, file = paste0(xword_dir, "xword_", fave_i, "-", i, ".RData"))
-  trimmed_xword_data <- trim_matrix(refined_xword[["xword"]], refined_xword[["word_locs"]])
-  
-  #draw xword with words filled in
-  png(paste0(xword_dir, "xword_", fave_i, "-", i, ".png"), family = font_family_for_nums, width = ncol(trimmed_xword_data$xword) * 30 * ptsize_x, 
-      height = nrow(trimmed_xword_data$xword) * 30 * ptsize_x, pointsize = 12 * ptsize_x)
-  par(xpd = NA, mar = c(0,0,0,0))
-  draw_xword(trimmed_xword_data$xword, trimmed_xword_data$word_locs, border_lwd = 2 * ptsize_x,
-             family = font_family_for_nums, num_cex = 1)
-  dev.off()
-  
-  #draw blank xword
-  png(paste0(xword_dir, "xword_", fave_i, "-", i, "_blank.png"), family = font_family_for_nums, width = ncol(trimmed_xword_data$xword) * 30 * ptsize_x, 
-      height = nrow(trimmed_xword_data$xword) * 30 * ptsize_x, pointsize = 12 * ptsize_x)
-  par(xpd = NA, mar = c(0,0,0,0))
-  draw_xword(trimmed_xword_data$xword, trimmed_xword_data$word_locs, border_lwd = 2 * ptsize_x, write_words = F,
-             family = font_family_for_nums, num_cex = 1)
-  dev.off()
-  
-  #draw shape of xword
-  png(paste0(xword_dir, "xword_", fave_i, "-", i, "_shape.png"), family = font_family_for_nums, width = ncol(trimmed_xword_data$xword) * 30 * ptsize_x, 
-      height = nrow(trimmed_xword_data$xword) * 30 * ptsize_x, pointsize = 12 * ptsize_x)
-  par(xpd = NA, mar = c(0,0,0,0))
-  draw_xword(trimmed_xword_data$xword, trimmed_xword_data$word_locs, border_lwd = 2 * ptsize_x, write_words = F, 
-             cell_color = "black", 
-             background_color = "white",
-             family = font_family_for_nums, num_cex = 1)
-  dev.off()
-  
-  #save words and clues
-  word_numbers <- number_words(trimmed_xword_data$word_locs)
-  
-  sink(paste0(xword_dir, "xword_", fave_i, "-", i, "_answers-clues.txt"))
-  
-  cat("ANSWERS:\n\n")
-  cat(paste0("\nHorizontal: ", paste0(word_numbers$word_order$h$num, ". ", full_words[word_numbers$word_order$h$word], collapse = " ")))
-  cat(paste0("\n\nVertical: ", paste0(word_numbers$word_order$v$num, ". ", full_words[word_numbers$word_order$v$word], collapse = " ")))
-  
-  cat("\n\nCLUES:\n\n")
-  cat(paste0("\nHorizontal: ", paste0(word_numbers$word_order$h$num, ". ", clues[word_numbers$word_order$h$word], collapse = " ")))
-  cat(paste0("\n\nVertical: ", paste0(word_numbers$word_order$v$num, ". ", clues[word_numbers$word_order$v$word], collapse = " ")))
-  
-  sink()
-  
-}
   
 }
