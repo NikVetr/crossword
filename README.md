@@ -51,12 +51,8 @@ Navigate to the project directory and install any additional dependencies as des
 
     ```
     words_and_clues <- readLines("input/text/2023-Dec_Xmas-Card-Xword.txt", warn = F)
-    
     ...
-    
     pic <- png::readPNG("input/img/black_heart.png")
-
-
     ```
 
 With paths to your own files. This will generate the crossword puzzle and save the output in both textual and graphical formats in the `output` directory.
@@ -73,7 +69,7 @@ I was able to produce the approximately heart-shaped crossword seen in the card 
 
 ![Target Crossword Shape](output/img/xword_3-orig_blank.png)
 
-With paired file in `output/txt/`. Admittedly, lots of the generated output were duds! But then it's just a matter of running the program for half an hour and picking whatever output is most pleasing. Also included at the end of `crossword_generator.R` is code to refine a specific crossword, ie use some desired crossword to initialize MCMC vs. using random initialization, which may help with iterating over specific designs.
+With paired file in `output/txt/`, which I then manually manipulated in Photoshop. Admittedly, lots of the generated output were duds! But then it's just a matter of running the program for half an hour and picking whatever output is most pleasing. Also included at the end of `crossword_generator.R` is code to refine a specific crossword, ie use some desired crossword to initialize MCMC vs. using random initialization, which may help with iterating over specific designs.
 
 ## Contributing
 
