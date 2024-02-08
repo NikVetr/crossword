@@ -61,9 +61,9 @@ With paths to your own files. This will generate the crossword puzzle and save t
 
 ### Example Output
 
-Using the word-clue list in `input/txt/2023-Dec_Xmas-Card-Xword_Russian.txt` and the target shape in `input/img/black_heart.png`:
+Using the word-clue list in `input/txt/2023-Dec_Xmas-Card-Xword_Russian.txt` and the target shape in `input/img/red_heart.png`:
 
-![Target Crossword Shape](input/img/black_heart.png)
+![Target Crossword Shape](input/img/red_heart.png)
 
 I was able to produce the approximately heart-shaped crossword seen in the card above:
 
