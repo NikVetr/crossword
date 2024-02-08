@@ -14,8 +14,8 @@ words <- unlist(sapply(as.integer(names(n_letters)), function(nl) sample(possibl
                                                n_letters[as.character(nl)], replace = F)))
 
 #or read in your own
-words_and_clues <- readLines("input/text/2023-Dec_Xmas-Card-Xword.txt", warn = F)
-words_and_clues <- readLines("input/text/2023-Dec_Xmas-Card-Xword_Russian.txt", warn = F, encoding = "UTF-8")
+words_and_clues <- readLines("input/txt/2023-Dec_Xmas-Card-Xword.txt", warn = F)
+words_and_clues <- readLines("input/txt/2023-Dec_Xmas-Card-Xword_Russian.txt", warn = F, encoding = "UTF-8")
 
 #process clues to appropriate format
 words_and_clues <- words_and_clues[grepl(":", words_and_clues)]
