@@ -35,13 +35,13 @@ used <- setNames(rep(F, n_words), words)
 word_locs <- lapply(setNames(words, words), function(x) return(NA))
 
 #load in a picture whose shape we want to target, and find the black pixels
-pic <- png::readPNG("input/img/black_heart.png")
+pic <- ?png::readPNG("input/img/red_heart.png")
 has_transparency <- min((c(1,0) - mean(pic[,,4] > 0.5)) * c(1,-1)) > c(0.05)
 if(has_transparency){
   pic_mat <- pic[,,4] > 0.01
   pic_locs <- which(pic_mat, arr.ind = T)
 } else {
-  pic_mat <- (pic[,,1] + pic[,,2] + pic[,,3]) <= 1
+  pic_mat <- (pic[,,1] + pic[,,2] + pic[,,3]) <= 2.75
   pic_locs <- which(pic_mat, arr.ind = T)
 }
 

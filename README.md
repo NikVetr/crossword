@@ -2,11 +2,11 @@
 
 ## Introduction
 
-The Crossword Generator is an R-based tool designed to automate the creation of crossword puzzles from given paired word + clue lists. I wrote this for making holiday cards, like:
+This Crossword Generator is an R-based tool designed to automate the creation of crossword puzzles from provided paired word + clue lists. I wrote this for making holiday cards, like this one from 2023:
 
 ![Generated Crossword Puzzle](output/img/2023-12-15_xmas-card_small.jpg)
 
-But I can imagine it being more broadly useful to educators, puzzle enthusiasts, and researchers with a customizable and efficient way to generate crosswords for educational purposes, leisure, and other tasks.
+But I can imagine it being more broadly useful to educators, puzzle enthusiasts, and others for generating custom crosswords, especially insofar as it is a bit more flexible than conventional crossword generators.
 
 The primary workflow leverages Markov Chain Monte Carlo to explore the space of possible crosswords, subject to constraints, with target mass constructed from a combination of graph-theoretic and user-specified properties.
 
@@ -23,7 +23,7 @@ The primary workflow leverages Markov Chain Monte Carlo to explore the space of 
 
 - **Multiple Language Support**: Generate crosswords in different languages, starting with English and Russian examples.
 
-- **Pleasing and Varied Output**: Generate blank crosswords, filled in crosswords, and shapes to feed into generative image preprocessors, alongside text-based ordered lists of clues, or export the crossword array and data for your own graphing usage. I also made the default drawn crossword to have a little drop-shadow effect that I thought looked nice.
+- **Pleasing and Varied Output**: Generate blank crosswords, filled in crosswords, and shapes to feed into generative image preprocessors, alongside text-based ordered lists of clues. Alternatively, export the crossword array and data for your own graphing in separate software. I also made the default drawn crossword to have a little drop-shadow effect that I thought looked nice.
 
 ## Getting Started
 
@@ -37,7 +37,7 @@ Before you begin, ensure you have R installed on your machine (version 3.6 or la
 
 Clone the repository to your local machine to get started with the Crossword Generator:
 
-> git clone https://github.com/YourUsername/crossword.git
+> git clone https://github.com/NikVetr/crossword.git
 
 Navigate to the project directory and install any additional dependencies as described above.
 
@@ -45,14 +45,14 @@ Navigate to the project directory and install any additional dependencies as des
 
 ### Typical Usage Scenario
 
-1. **Preparing Your Input Files**: Place your word list in the `input/text` directory. The file should have one word-clue pair per line, separated by a colon (:), see example in `input/text`. Place any target images in `input/img`. By default, black pixels will correspond to the space that the crossword aims to fill in, and white or transparent pixels to the space to be avoided.
+1. **Preparing Your Input Files**: Place your word list in the `input/text` directory. The file should have one word-clue pair per line, separated by a colon (:), see example in `input/text`. Place any target images in `input/img`. By default, darker pixels will correspond to the space that the crossword aims to fill in, and white or transparent pixels to the space to be avoided.
 
 2. **Running the Script**: Execute the `crossword_generator.R` script, specifying your input file in the script. For example, modifying the line:
 
     ```
     words_and_clues <- readLines("input/text/2023-Dec_Xmas-Card-Xword.txt", warn = F)
     ...
-    pic <- png::readPNG("input/img/black_heart.png")
+    pic <- png::readPNG("input/img/red_heart.png")
     ```
 
 With paths to your own files. This will generate the crossword puzzle and save the output in both textual and graphical formats in the `output` directory.
